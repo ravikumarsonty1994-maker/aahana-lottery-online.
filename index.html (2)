@@ -1,0 +1,365 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Ticket Booking</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f6fb;
+  color:#172033;
+}
+header{
+  background:linear-gradient(120deg,#101c43,#253e83);
+  color:white;
+  text-align:center;
+  padding:30px 15px;
+}
+header h1{margin:0;font-size:28px}
+header p{color:#d9e2ff}
+.container{
+  max-width:950px;
+  margin:25px auto;
+  padding:15px;
+}
+.card{
+  background:white;
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 3px 15px #0000000d;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  text-align:center;
+}
+.stat{
+  background:#f0f4ff;
+  border-radius:10px;
+  padding:15px 5px;
+}
+.stat strong{
+  display:block;
+  font-size:22px;
+  color:#2149a0;
+}
+.stat small{color:#666}
+.draws{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+}
+.draw{
+  flex:1;
+  padding:13px;
+  border:1px solid #ccd5e5;
+  background:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+.draw.active{
+  background:#24499b;
+  color:white;
+}
+#search{
+  width:100%;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  margin:10px 0 15px;
+}
+.legend{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+  font-size:13px;
+  margin-bottom:15px;
+}
+.tickets{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:9px;
+}
+.ticket{
+  padding:12px 3px;
+  border:1px solid #cbd5e1;
+  border-radius:7px;
+  background:white;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:bold;
+}
+.ticket.selected{
+  background:#dbeafe;
+  border:2px solid #2563eb;
+  color:#1744a0;
+}
+.ticket.sold{
+  background:#fee2e2;
+  color:#b91c1c;
+  cursor:not-allowed;
+  text-decoration:line-through;
+}
+input{
+  width:100%;
+  padding:13px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  margin:7px 0 14px;
+}
+button.submit{
+  background:#159447;
+  color:white;
+  border:0;
+  padding:15px;
+  width:100%;
+  border-radius:9px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.total{
+  background:#eff6ff;
+  padding:15px;
+  border-radius:8px;
+  margin:15px 0;
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
+}
+footer{text-align:center;padding:25px;color:#777}
+@media(max-width:500px){
+  .tickets{grid-template-columns:repeat(3,1fr)}
+  .stats{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>DAILY TICKET</h1>
+  <p>LOTTERY BOOKING LIVE</p>
+  <h2>YOUR NUMBER, YOUR CHOICE</h2>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h2>Choose Your Ticket</h2>
+  <p>Select your preferred available ticket.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <strong>100</strong>
+      <small>Total Tickets</small>
+    </div>
+    <div class="stat">
+      <strong id="available">100</strong>
+      <small>Available</small>
+    </div>
+    <div class="stat">
+      <strong>₹250</strong>
+      <small>Per Ticket</small>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Ticket Collection</h2>
+
+  <div class="draws">
+    <button class="draw active" onclick="setDraw('3:00 PM',this)">
+      DRAW 3:00 PM
+    </button>
+    <button class="draw" onclick="setDraw('7:00 PM',this)">
+      DRAW 7:00 PM
+    </button>
+  </div>
+
+  <div class="legend">
+    <span>🟢 Available</span>
+    <span>🔵 Selected</span>
+    <span>🔴 Sold Out</span>
+  </div>
+
+  <input id="search" placeholder="Search ticket number..."
+  oninput="renderTickets()">
+
+  <div class="tickets" id="tickets"></div>
+</div>
+
+<div class="card">
+  <h2>Enter Your Details</h2>
+
+  <p id="summary">Draw: 3:00 PM · 0 tickets · Total ₹0</p>
+
+  <form onsubmit="booking(event)">
+    <label>Full Name *</label>
+    <input id="name" required placeholder="Enter your name">
+
+    <label>Mobile Number *</label>
+    <input id="mobile" required type="tel"
+    pattern="[0-9]{10}" placeholder="10-digit number">
+
+    <label>District *</label>
+    <input id="district" required placeholder="Your district">
+
+    <label>State *</label>
+    <input id="state" required placeholder="Your state">
+
+    <div class="total">
+      <span id="count">0 Tickets</span>
+      <span id="amount">₹0</span>
+    </div>
+
+    <button class="submit" type="submit">
+      Send Booking Request on WhatsApp
+    </button>
+  </form>
+</div>
+
+</div>
+
+<footer>
+  DAILY TICKET BOOKING LIVE
+</footer>
+
+<script>
+const PRICE = 250;
+
+// Replace with your business WhatsApp number.
+// Include country code, without + or spaces.
+const WHATSAPP_NUMBER = "919811274479";
+
+let drawTime = "3:00 PM";
+let selected = [];
+
+const sold = [5,12,23,34,45,56,67,78];
+
+const numbers = Array.from({length:100},(_,i)=>
+  "KL-" + String(880001+i).padStart(6,"0")
+);
+
+function renderTickets(){
+  const search = document.getElementById("search")
+    .value.toLowerCase();
+
+  const area = document.getElementById("tickets");
+  area.innerHTML = "";
+
+  numbers.forEach((number,i)=>{
+    if(!number.toLowerCase().includes(search)) return;
+
+    const isSold = sold.includes(i);
+    const isSelected = selected.includes(number);
+
+    const btn = document.createElement("button");
+    btn.className = "ticket";
+
+    if(isSold) btn.classList.add("sold");
+    if(isSelected) btn.classList.add("selected");
+
+    btn.textContent = number +
+      (isSold ? " SOLD" : "");
+
+    btn.disabled = isSold;
+
+    btn.onclick = ()=>{
+      if(selected.includes(number)){
+        selected = selected.filter(x=>x!==number);
+      }else{
+        selected.push(number);
+      }
+      renderTickets();
+      updateTotal();
+    };
+
+    area.appendChild(btn);
+  });
+
+  document.getElementById("available").textContent =
+    100-sold.length;
+}
+
+function setDraw(time,button){
+  drawTime = time;
+
+  document.querySelectorAll(".draw").forEach(b=>
+    b.classList.remove("active")
+  );
+
+  button.classList.add("active");
+  updateTotal();
+}
+
+function updateTotal(){
+  const count = selected.length;
+  const total = count*PRICE;
+
+  document.getElementById("count").textContent =
+    count+" Tickets";
+
+  document.getElementById("amount").textContent =
+    "₹"+total;
+
+  document.getElementById("summary").textContent =
+    "Draw: "+drawTime+" · "+count+
+    " tickets · Total ₹"+total;
+}
+
+function booking(event){
+  event.preventDefault();
+
+  if(selected.length===0){
+    alert("Please select at least one ticket.");
+    return;
+  }
+
+  const name = document.getElementById("name").value;
+  const mobile = document.getElementById("mobile").value;
+  const district = document.getElementById("district").value;
+  const state = document.getElementById("state").value;
+
+  const total = selected.length*PRICE;
+
+  const message =
+`TICKET BOOKING REQUEST
+
+Name: ${name}
+Mobile: ${mobile}
+District: ${district}
+State: ${state}
+
+Draw: ${drawTime}
+Tickets: ${selected.join(", ")}
+
+Ticket Price: ₹${PRICE}
+Total: ₹${total}
+
+Please review this booking request.`;
+
+  if(!/^91[0-9]{10}$/.test(WHATSAPP_NUMBER)){
+    alert("Please configure your WhatsApp business number in the code.");
+    return;
+  }
+
+  const url = "https://wa.me/"+WHATSAPP_NUMBER+
+    "?text="+encodeURIComponent(message);
+
+  window.open(url,"_blank");
+}
+
+renderTickets();
+updateTotal();
+</script>
+
+</body>
+</html>
